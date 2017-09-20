@@ -9,11 +9,20 @@
 import Cocoa
 
 class ViewController: NSViewController {
+    @IBOutlet weak var hostname: NSTextField!
+
+    var client: TLSClient?
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        hostname!.stringValue = "google.com"
 
         // Do any additional setup after loading the view.
+    }
+
+    @IBAction func scan(_ sender: NSButton) {
+        self.client = TLSClient(host: self.hostname.stringValue)
+        self.client!.connect()
     }
 
     override var representedObject: Any? {
@@ -24,4 +33,3 @@ class ViewController: NSViewController {
 
 
 }
-

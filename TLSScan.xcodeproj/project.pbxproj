@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1FB4CDE81F72AA960015EC68 /* TLSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4CDE71F72AA960015EC68 /* TLSClient.swift */; };
 		1FFCC3EB1F713FD500491865 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCC3EA1F713FD500491865 /* AppDelegate.swift */; };
 		1FFCC3ED1F713FD500491865 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCC3EC1F713FD500491865 /* ViewController.swift */; };
 		1FFCC3EF1F713FD500491865 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FFCC3EE1F713FD500491865 /* Assets.xcassets */; };
@@ -33,6 +34,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1FB4CDE71F72AA960015EC68 /* TLSClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TLSClient.swift; sourceTree = "<group>"; };
 		1FFCC3E71F713FD500491865 /* TLSScan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TLSScan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FFCC3EA1F713FD500491865 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1FFCC3EC1F713FD500491865 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 				1FFCC3EC1F713FD500491865 /* ViewController.swift */,
 				1FFCC3EE1F713FD500491865 /* Assets.xcassets */,
 				1FFCC3F01F713FD500491865 /* Main.storyboard */,
+				1FB4CDE71F72AA960015EC68 /* TLSClient.swift */,
 				1FFCC3F31F713FD500491865 /* Info.plist */,
 			);
 			path = TLSScan;
@@ -257,6 +260,7 @@
 			files = (
 				1FFCC3ED1F713FD500491865 /* ViewController.swift in Sources */,
 				1FFCC3EB1F713FD500491865 /* AppDelegate.swift in Sources */,
+				1FB4CDE81F72AA960015EC68 /* TLSClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -498,6 +502,7 @@
 				1FFCC40E1F713FD500491865 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		1FFCC40F1F713FD500491865 /* Build configuration list for PBXNativeTarget "TLSScanTests" */ = {
 			isa = XCConfigurationList;
@@ -506,6 +511,7 @@
 				1FFCC4111F713FD500491865 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		1FFCC4121F713FD500491865 /* Build configuration list for PBXNativeTarget "TLSScanUITests" */ = {
 			isa = XCConfigurationList;
@@ -514,6 +520,7 @@
 				1FFCC4141F713FD500491865 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
