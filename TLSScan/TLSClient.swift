@@ -8,6 +8,17 @@
 
 import Foundation
 
+extension FixedWidthInteger {
+    var bytes: [UInt8] {
+        let byteWidth = Self.bitWidth / 8
+        var result = [UInt8](repeating: 0, count: byteWidth)
+        for i in 0..<byteWidth {
+            result[i] = UInt8(truncatingIfNeeded: self >> ((byteWidth - (i + 1)) * 8))
+        }
+        return result
+    }
+}
+
 class TLSClient: NSObject, StreamDelegate {
     let host: String
 
@@ -45,4 +56,13 @@ class TLSClient: NSObject, StreamDelegate {
             print("eventCode = \(eventCode)")
         }
     }
+
+    func make_tls_plaintext(type: Int, payload: [UInt8]) -> [UInt8] {
+        return [3, 1] + UInt16(payload.count).bytes + payload
+    }
+
+    func make_client_hello() -> [UInt8] {
+        return make_tls_plaintext(type: 22, payload: [])
+    }
 }
+
