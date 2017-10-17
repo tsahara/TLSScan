@@ -20,7 +20,7 @@ extension FixedWidthInteger {
 
     var bytes3: [UInt8] {
         let b = bytes
-        return [ b[0] + b[1] + b[2] ]
+        return [ b[1], b[2], b[3] ]
     }
 }
 
@@ -29,6 +29,8 @@ class TLSClient: NSObject, StreamDelegate {
 
     var inputStream: InputStream?
     var outputStream: OutputStream?
+
+    var writebuffer: [UInt8] = []
 
     init(host: String) {
         self.host = host
@@ -55,15 +57,21 @@ class TLSClient: NSObject, StreamDelegate {
         switch eventCode {
         case Stream.Event.openCompleted:
             print("open")
+            self.writebuffer += make_client_hello()
         case Stream.Event.hasSpaceAvailable:
             print("writable")
+            if self.writebuffer.count > 0 {
+                let n = (aStream as! OutputStream).write(self.writebuffer, maxLength: self.writebuffer.count)
+                self.writebuffer.removeFirst(n)
+                print("written: \(n)")
+            }
         default:
             print("eventCode = \(eventCode)")
         }
     }
 
     func make_client_hello() -> [UInt8] {
-        return make_tls_plaintext(type: 22 /* handshake */, fragment: make_tls_handshake(msg_type: 1 /* client_hello */, body: []))
+        return make_tls_plaintext(type: 22 /* handshake */, fragment: make_tls_handshake(msg_type: 1 /* client_hello */, body: make_tls_client_hello()))
     }
 
     func make_tls_plaintext(type: Int, fragment: [UInt8]) -> [UInt8] {
