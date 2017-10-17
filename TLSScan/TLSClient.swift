@@ -17,6 +17,11 @@ extension FixedWidthInteger {
         }
         return result
     }
+
+    var bytes3: [UInt8] {
+        let b = bytes
+        return [ b[0] + b[1] + b[2] ]
+    }
 }
 
 class TLSClient: NSObject, StreamDelegate {
@@ -57,12 +62,17 @@ class TLSClient: NSObject, StreamDelegate {
         }
     }
 
-    func make_tls_plaintext(type: Int, payload: [UInt8]) -> [UInt8] {
-        return [3, 1] + UInt16(payload.count).bytes + payload
+    func make_client_hello() -> [UInt8] {
+        return make_tls_plaintext(type: 22 /* handshake */, fragment: make_tls_handshake(payload: []))
     }
 
-    func make_client_hello() -> [UInt8] {
-        return make_tls_plaintext(type: 22, payload: [])
+    func make_tls_plaintext(type: Int, fragment: [UInt8]) -> [UInt8] {
+        return [UInt8(type)] + [3, 1] + UInt16(fragment.count).bytes + fragment
     }
+
+    func make_tls_handshake(payload: [UInt8]) -> [UInt8] {
+        return [1 /* client_hello* */] + UInt32(payload.count).bytes3 + payload
+    }
+
 }
 
