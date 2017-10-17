@@ -63,16 +63,19 @@ class TLSClient: NSObject, StreamDelegate {
     }
 
     func make_client_hello() -> [UInt8] {
-        return make_tls_plaintext(type: 22 /* handshake */, fragment: make_tls_handshake(payload: []))
+        return make_tls_plaintext(type: 22 /* handshake */, fragment: make_tls_handshake(msg_type: 1 /* client_hello */, body: []))
     }
 
     func make_tls_plaintext(type: Int, fragment: [UInt8]) -> [UInt8] {
         return [UInt8(type)] + [3, 1] + UInt16(fragment.count).bytes + fragment
     }
 
-    func make_tls_handshake(payload: [UInt8]) -> [UInt8] {
-        return [1 /* client_hello* */] + UInt32(payload.count).bytes3 + payload
+    func make_tls_handshake(msg_type: UInt8, body: [UInt8]) -> [UInt8] {
+        return [msg_type] + UInt32(body.count).bytes3 + body
     }
 
+    func make_tls_client_hello() -> [UInt8] {
+        return [3, 1 /* client_version */] + [UInt8](repeating: 0, count: 32) + [0 /* SessionID */] + [ 0, 2, 0, 5 ] + [ 1, 0 /* compression_methods */]
+    }
 }
 
