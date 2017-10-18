@@ -30,10 +30,39 @@ class TLSClient: NSObject, StreamDelegate {
     var inputStream: InputStream?
     var outputStream: OutputStream?
 
+    var readBuffer: [UInt8] = []
     var writebuffer: [UInt8] = []
+
+    var cipherIndex = 1
+
+    static let cipherSuite = [
+        (0x00, 0x00, "TLS_NULL_WITH_NULL_NULL"),
+        (0xC0, 0x2F, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"),
+        (0xC0, 0xAA, "TLS_PSK_DHE_WITH_AES_128_CCM_8"),
+        (0xC0, 0xAB, "TLS_PSK_DHE_WITH_AES_256_CCM_8"),
+        (0xC0, 0xAC, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"),
+        (0xC0, 0xAD, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"),
+        (0xC0, 0xAE, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"),
+        (0xC0, 0xAF, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"),
+        (0xCC, 0xA8, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"),
+        (0xCC, 0xA9, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"),
+        (0xCC, 0xAA, "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256"),
+        (0xCC, 0xAB, "TLS_PSK_WITH_CHACHA20_POLY1305_SHA256"),
+        (0xCC, 0xAC, "TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256"),
+        (0xCC, 0xAD, "TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256"),
+        (0xCC, 0xAE, "TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256"),
+        (0xD0, 0x01, "TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256"),
+        (0xD0, 0x02, "TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384"),
+        (0xD0, 0x03, "TLS_ECDHE_PSK_WITH_AES_128_CCM_8_SHA256"),
+        (0xD0, 0x05, "TLS_ECDHE_PSK_WITH_AES_128_CCM_SHA256"),
+    ]
 
     init(host: String) {
         self.host = host
+    }
+
+    func scan() {
+        self.connect()
     }
 
     func connect() {
@@ -46,6 +75,10 @@ class TLSClient: NSObject, StreamDelegate {
         self.inputStream  = readStream!.takeRetainedValue()
         self.outputStream = writeStream!.takeRetainedValue()
 
+        self.inputStream!.delegate = self
+        self.inputStream!.schedule(in: RunLoop.current, forMode: .defaultRunLoopMode)
+        self.inputStream!.open()
+
         if let out = self.outputStream {
             out.delegate = self
             out.schedule(in: RunLoop.current, forMode: .defaultRunLoopMode)
@@ -56,18 +89,41 @@ class TLSClient: NSObject, StreamDelegate {
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
         switch eventCode {
         case Stream.Event.openCompleted:
-            print("open")
+//            print("open")
             self.writebuffer += make_client_hello()
         case Stream.Event.hasSpaceAvailable:
-            print("writable")
+//            print("writable")
             if self.writebuffer.count > 0 {
                 let n = (aStream as! OutputStream).write(self.writebuffer, maxLength: self.writebuffer.count)
                 self.writebuffer.removeFirst(n)
                 print("written: \(n)")
             }
+        case Stream.Event.hasBytesAvailable:
+//            print("readable")
+            var buf = [UInt8](repeating: 0, count: 2048)
+            let n = self.inputStream!.read(&buf, maxLength: buf.count)
+            if n > 0 {
+                switch buf[0] {
+                case 21:
+                    let (_, _, name) = TLSClient.cipherSuite[self.cipherIndex]
+                    print("TLS Alert -> \(name) rejected")
+                case 22:
+                    print("TLS Handshake -> accepted")
+                default:
+                    print("unexpected msg type \(buf[0])")
+                }
+                self.close()
+            }
         default:
             print("eventCode = \(eventCode)")
         }
+    }
+
+    func close() {
+        self.inputStream?.remove(from: RunLoop.current, forMode: .defaultRunLoopMode)
+        self.inputStream?.close()
+        self.outputStream?.remove(from: RunLoop.current, forMode: .defaultRunLoopMode)
+        self.outputStream?.close()
     }
 
     func make_client_hello() -> [UInt8] {
@@ -75,7 +131,7 @@ class TLSClient: NSObject, StreamDelegate {
     }
 
     func make_tls_plaintext(type: Int, fragment: [UInt8]) -> [UInt8] {
-        return [UInt8(type)] + [3, 1] + UInt16(fragment.count).bytes + fragment
+        return [UInt8(type)] + [3, 3] + UInt16(fragment.count).bytes + fragment
     }
 
     func make_tls_handshake(msg_type: UInt8, body: [UInt8]) -> [UInt8] {
@@ -83,7 +139,15 @@ class TLSClient: NSObject, StreamDelegate {
     }
 
     func make_tls_client_hello() -> [UInt8] {
-        return [3, 1 /* client_version */] + [UInt8](repeating: 0, count: 32) + [0 /* SessionID */] + [ 0, 2, 0, 5 ] + [ 1, 0 /* compression_methods */]
+        let (a, b, _) = TLSClient.cipherSuite[self.cipherIndex]
+        let cipherBytes: [UInt8] = [UInt8(a), UInt8(b)]
+        var bytes: [UInt8] = []
+        bytes += [ 3, 1 /* client_version */]
+        bytes += [UInt8](repeating: 0, count: 32)
+        bytes += [0 /* SessionID */]
+        bytes += [ 0, UInt8(cipherBytes.count) ] + cipherBytes
+        bytes += [ 1, 0 /* compression_methods */]
+        return bytes
     }
 }
 

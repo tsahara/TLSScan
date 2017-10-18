@@ -22,7 +22,7 @@ class ViewController: NSViewController {
 
     @IBAction func scan(_ sender: NSButton) {
         self.client = TLSClient(host: self.hostname.stringValue)
-        self.client!.connect()
+        self.client!.scan()
     }
 
     override var representedObject: Any? {
