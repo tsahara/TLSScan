@@ -33,7 +33,7 @@ class TLSClient: NSObject, StreamDelegate {
     var readBuffer: [UInt8] = []
     var writebuffer: [UInt8] = []
 
-    var cipherIndex = 1
+    var cipherIndex = 0
 
     static let cipherSuite = [
         (0x00, 0x00, "TLS_NULL_WITH_NULL_NULL"),
@@ -63,6 +63,13 @@ class TLSClient: NSObject, StreamDelegate {
 
     func scan() {
         self.connect()
+    }
+
+    func next() {
+        if self.cipherIndex < TLSClient.cipherSuite.count - 1 {
+            self.cipherIndex += 1
+            self.connect()
+        }
     }
 
     func connect() {
@@ -124,6 +131,7 @@ class TLSClient: NSObject, StreamDelegate {
         self.inputStream?.close()
         self.outputStream?.remove(from: RunLoop.current, forMode: .defaultRunLoopMode)
         self.outputStream?.close()
+        self.next()
     }
 
     func make_client_hello() -> [UInt8] {
@@ -142,7 +150,7 @@ class TLSClient: NSObject, StreamDelegate {
         let (a, b, _) = TLSClient.cipherSuite[self.cipherIndex]
         let cipherBytes: [UInt8] = [UInt8(a), UInt8(b)]
         var bytes: [UInt8] = []
-        bytes += [ 3, 1 /* client_version */]
+        bytes += [ 3, 3 /* client_version */]
         bytes += [UInt8](repeating: 0, count: 32)
         bytes += [0 /* SessionID */]
         bytes += [ 0, UInt8(cipherBytes.count) ] + cipherBytes
