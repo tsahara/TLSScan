@@ -110,12 +110,12 @@ class TLSClient: NSObject, StreamDelegate {
             var buf = [UInt8](repeating: 0, count: 2048)
             let n = self.inputStream!.read(&buf, maxLength: buf.count)
             if n > 0 {
+                let (_, _, name) = TLSClient.cipherSuite[self.cipherIndex]
                 switch buf[0] {
                 case 21:
-                    let (_, _, name) = TLSClient.cipherSuite[self.cipherIndex]
-                    print("TLS Alert -> \(name) rejected")
+                    print("bad -> \(name)")
                 case 22:
-                    print("TLS Handshake -> accepted")
+                    print("ok -> \(name)")
                 default:
                     print("unexpected msg type \(buf[0])")
                 }
@@ -155,7 +155,13 @@ class TLSClient: NSObject, StreamDelegate {
         bytes += [0 /* SessionID */]
         bytes += [ 0, UInt8(cipherBytes.count) ] + cipherBytes
         bytes += [ 1, 0 /* compression_methods */]
-        return bytes
+
+        let server_name: [UInt8] = [0] + UInt16(self.host.utf8.count).bytes + self.host.utf8
+        let extdata = UInt16(server_name.count).bytes + server_name
+        let ext = UInt16(0).bytes + UInt16(extdata.count).bytes + extdata
+        let exts = UInt16(ext.count).bytes + ext
+
+        return bytes + exts
     }
 }
 
